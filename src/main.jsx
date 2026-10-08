@@ -14,7 +14,7 @@ const saveKey='hk-case-ch01-deploy-preview-v1';
 function useSave(state){useEffect(()=>{const t=setTimeout(()=>localStorage.setItem(saveKey,JSON.stringify(state)),200);return()=>clearTimeout(t)},[state])}
 
 function City(){
- const asphalt=useTexture('./textures/asphalt.png'); const concrete=useTexture('./textures/concrete.png'); const plaster=useTexture('./textures/plaster.png');
+ const asphalt=useTexture('./textures/asphalt.svg'); const concrete=useTexture('./textures/concrete.svg'); const plaster=useTexture('./textures/plaster.svg');
  for(const t of [asphalt,concrete,plaster]){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;}
  asphalt.repeat.set(8,24);concrete.repeat.set(5,22);plaster.repeat.set(2,2);
  const b=[]; for(let i=0;i<7;i++) b.push(<mesh key={i} position={[64,8+i*30-90,10+(i%3)*3]}><boxGeometry args={[28,24,20+(i%3)*6]}/><meshStandardMaterial map={plaster} color={i%2?'#b0a38f':'#d1c0a5'} roughness={.94}/></mesh>);
