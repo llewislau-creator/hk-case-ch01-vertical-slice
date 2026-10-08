@@ -1,1 +1,83 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>香港奇案：跑馬地檔案</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>香港奇案：跑馬地檔案</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0c0b;color:#eee8da;font-family:Inter,"PingFang HK","Noto Sans TC",system-ui,sans-serif}
+*{box-sizing:border-box}canvas{display:block}
+#loading,#complete,#casebook,#inspect,#dialog{position:fixed;inset:0;z-index:50;background:#090a08ee;display:grid;place-items:center;padding:20px}
+.panel{width:min(720px,100%);border:1px solid #4b4a43;background:#151713;padding:22px;border-radius:12px}
+#loading h1,#complete h1{font-size:48px;margin:8px 0}.eyebrow{font-size:10px;letter-spacing:.18em;color:#8c8981}.bar{height:2px;background:#2b2c27;margin:24px 0}.bar i{display:block;height:100%;background:#b5aa91;width:100%}
+button{border:1px solid #55534c;background:#23251f;color:#eee8da;padding:9px 11px;border-radius:7px;cursor:pointer}button:disabled{opacity:.35}
+#hud{position:fixed;left:16px;top:16px;z-index:10;background:#121310d8;border:1px solid #ffffff1c;padding:12px 14px;border-radius:10px;max-width:420px}
+#hud b{display:block;margin:4px 0}#hud p{font-size:12px;color:#bbb5a8;margin:6px 0}
+#tools{position:fixed;right:16px;top:16px;z-index:10;display:flex;gap:7px}
+#help{position:fixed;left:16px;bottom:16px;z-index:10;background:#111d;padding:8px 10px;border-radius:8px;font-size:12px}
+#prompt{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);z-index:12}
+#dialog .panel,#inspect .panel,#casebook .panel{width:min(920px,100%)}#dialog p,#casebook p,#inspect p{line-height:1.6;color:#bbb5a8}
+#casebook ul{line-height:1.7}.row{display:flex;gap:8px;flex-wrap:wrap}.ok{background:#253024;border-color:#586650}
+#recon{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:15;display:none;gap:8px;background:#2d211bd9;border:1px solid #795f49;padding:10px;border-radius:9px}
+#crosshair{position:fixed;left:50%;top:50%;width:8px;height:8px;border:1px solid #fff9;border-radius:50%;transform:translate(-50%,-50%);z-index:9;pointer-events:none}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="loading"><div class="panel"><div class="eyebrow">HONG KONG CASE ARCHIVE</div><h1>CASE 001</h1><p>跑馬地／1974</p><div class="bar"><i></i></div><button id="enter">進入案件</button></div></div>
+<div id="hud"><div class="eyebrow">HONG KONG CASE ARCHIVE</div><b>CASE 001 / 跑馬地 / 1974</b><p id="objective">前往異常人群與紙盒位置</p></div>
+<div id="tools"><button id="bookBtn">案件簿</button><button id="eveningBtn" class="hidden">傍晚重建</button></div>
+<div id="help">WASD 移動 · Shift 快走 · 滑鼠視角 · 點擊畫面鎖定 · E 與附近人物對話</div>
+<button id="prompt" class="hidden">檢查紙盒</button>
+<div id="recon"><b>1974-12-16 傍晚重建</b><button id="tramBtn">確認電車總站節點</button><button id="gapBtn">標示 Unknown 路段</button></div>
+<div id="crosshair"></div>
+<div id="dialog" class="hidden"><div class="panel"><div class="eyebrow" id="dialogName"></div><p id="dialogText"></p><button id="dialogClose">記錄口供</button></div></div>
+<div id="inspect" class="hidden"><div class="panel"><div class="eyebrow">EVIDENCE E01</div><h2>紙盒</h2><p>目前 deployment 版使用簡化 3D 檢視。記錄觀察，不直接判案。</p><div class="row"><button data-clue="box_rope">記錄：外部綁繩痕跡</button><button data-clue="box_condition">記錄：搬運／磨損痕跡</button><button id="inspectClose">返回現場</button></div></div></div>
+<div id="casebook" class="hidden"><div class="panel"><div class="row" style="justify-content:space-between"><div><div class="eyebrow">CASEBOOK</div><h2>跑馬地檔案：紙盒</h2></div><button id="bookClose">關閉</button></div><div class="row"><button id="identityBtn">D01 身份／失蹤紀錄</button><button id="contactBtn">D02 最後聯絡</button></div><h3>已記錄線索</h3><ul id="clueList"></ul><h3>第一推理</h3><p>紙盒曾被搬運，而棄置時間／方式仍需調查。</p><button id="firstDed">工作假說未解鎖</button><h3>第二推理</h3><p>電車總站附近可作最後可信空間節點；之後應保留為 Unknown。</p><button id="secondDed" disabled>提交第二推理</button></div></div>
+<div id="complete" class="hidden"><div class="panel"><div class="eyebrow">CHAPTER 01 COMPLETE</div><h1>調查仍未結束</h1><p>你已建立兩個工作假說：紙盒曾被搬運；總站之後的確切路線仍屬未知。</p><button onclick="localStorage.removeItem('hkcase-static-v1');location.reload()">重新開始</button></div></div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.170.0/build/three.module.js';
+
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xc8c0ad);scene.fog=new THREE.Fog(0xc8c0ad,45,180);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,500);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);document.body.prepend(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x4d5148,1.3));const sun=new THREE.DirectionalLight(0xffffff,1.8);sun.position.set(40,70,-30);scene.add(sun);
+const mat=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:.95});
+function box(s,p,c){const m=new THREE.Mesh(new THREE.BoxGeometry(...s),mat(c));m.position.set(...p);scene.add(m);return m}
+box([250,.4,300],[0,-.2,0],0x8a877d);box([24,.12,230],[25,.02,0],0x44433f);box([95,.12,210],[-57,.03,5],0x526b4f);box([1.4,1.2,215],[-7,.6,5],0x9b9585);
+for(let i=0;i<7;i++)box([28,20+(i%3)*6,24],[64,10+(i%3)*3,8+i*30-90],i%2?0x918a7b:0xaaa089);
+for(const x of [20.5,29.5])box([.12,.06,190],[x,.13,-3],0x777777);
+const evidence=box([1.2,.9,.85],[11.7,.5,4],0x8b6744);evidence.name='evidence';
+const tram=new THREE.Group();tram.add(new THREE.Mesh(new THREE.BoxGeometry(2,3.4,8.5),mat(0x315a3d)));const t2=new THREE.Mesh(new THREE.BoxGeometry(1.9,1.7,8),mat(0x315a3d));t2.position.y=1.9;tram.add(t2);tram.position.set(25,1.8,0);scene.add(tram);
+const npcs={cleaner:{p:[14,.9,.8],name:'清潔工',text:'我今朝返工時見到個紙盒放喺行人路邊。',clue:'cleaner'},patrol:{p:[17,.9,18],name:'巡警',text:'現場已封鎖。先從外圍觀察紙盒、馬路同附近出入口。',clue:'patrol'},news:{p:[9.5,.9,-59],name:'報販／街坊綜合角色',text:'朝早呢段路通常已經開始多人；大型物件搬運理應較易被留意。',clue:'visibility'}};
+for(const n of Object.values(npcs)){const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.CapsuleGeometry(.25,.95,4,8),mat(0x566f85)));const h=new THREE.Mesh(new THREE.SphereGeometry(.19,12,12),mat(0xb49a7a));h.position.y=.8;g.add(h);g.position.set(...n.p);scene.add(g)}
+camera.position.set(32,1.65,-112);
+const keys={},dir=new THREE.Vector3();let yaw=0,pitch=0,entered=false,near=null,evening=false;
+const saved=JSON.parse(localStorage.getItem('hkcase-static-v1')||'{}');const clues=new Set(saved.clues||[]);evening=!!saved.evening;
+function save(){localStorage.setItem('hkcase-static-v1',JSON.stringify({clues:[...clues],evening}))}
+function has(...x){return x.every(v=>clues.has(v))}
+function updateUI(){const first=has('cleaner','visibility')&&(clues.has('box_rope')||clues.has('box_condition'));document.querySelector('#eveningBtn').classList.toggle('hidden',!first||evening);document.querySelector('#firstDed').textContent=first?'工作假說已成立':'工作假說未解鎖';document.querySelector('#firstDed').classList.toggle('ok',first);document.querySelector('#firstDed').disabled=!first;document.querySelector('#secondDed').disabled=!(has('identity','contact','tram','gap')&&evening);document.querySelector('#clueList').innerHTML=[...clues].map(c=>'<li>'+c+'</li>').join('');document.querySelector('#tramBtn').textContent=clues.has('tram')?'✓ 電車總站節點':'確認電車總站節點';document.querySelector('#gapBtn').textContent=clues.has('gap')?'✓ Unknown 路段':'標示 Unknown 路段'}
+addEventListener('keydown',e=>keys[e.code]=true);addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement){yaw-=e.movementX*.0022;pitch=THREE.MathUtils.clamp(pitch-e.movementY*.0019,-1.2,1.2)}});
+renderer.domElement.addEventListener('click',()=>{if(entered)renderer.domElement.requestPointerLock?.()});
+document.querySelector('#enter').onclick=()=>{entered=true;document.querySelector('#loading').classList.add('hidden')};
+document.querySelector('#bookBtn').onclick=()=>{document.exitPointerLock?.();updateUI();document.querySelector('#casebook').classList.remove('hidden')};
+document.querySelector('#bookClose').onclick=()=>document.querySelector('#casebook').classList.add('hidden');
+document.querySelector('#prompt').onclick=()=>{document.exitPointerLock?.();document.querySelector('#inspect').classList.remove('hidden')};
+document.querySelector('#inspectClose').onclick=()=>document.querySelector('#inspect').classList.add('hidden');
+document.querySelectorAll('[data-clue]').forEach(b=>b.onclick=()=>{clues.add(b.dataset.clue);save();updateUI()});
+document.querySelector('#identityBtn').onclick=()=>{clues.add('identity');save();updateUI()};document.querySelector('#contactBtn').onclick=()=>{clues.add('contact');save();updateUI()};
+document.querySelector('#eveningBtn').onclick=()=>{evening=true;save();scene.background.set(0x6c6257);scene.fog.color.set(0x6c6257);document.querySelector('#recon').style.display='flex';document.querySelector('#objective').textContent='1974-12-16 傍晚重建：確認最後可信位置';updateUI()};
+document.querySelector('#tramBtn').onclick=()=>{clues.add('tram');save();updateUI()};document.querySelector('#gapBtn').onclick=()=>{clues.add('gap');save();updateUI()};
+document.querySelector('#secondDed').onclick=()=>{document.querySelector('#casebook').classList.add('hidden');document.querySelector('#complete').classList.remove('hidden')};
+document.querySelector('#dialogClose').onclick=()=>{if(near){clues.add(npcs[near].clue);save()}document.querySelector('#dialog').classList.add('hidden');updateUI()};
+function talkTo(id){near=id;document.exitPointerLock?.();document.querySelector('#dialogName').textContent=npcs[id].name;document.querySelector('#dialogText').textContent=npcs[id].text;document.querySelector('#dialog').classList.remove('hidden')}
+if(evening){scene.background.set(0x6c6257);scene.fog.color.set(0x6c6257);document.querySelector('#recon').style.display='flex';document.querySelector('#objective').textContent='1974-12-16 傍晚重建：確認最後可信位置'}
+let last=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min(.03,(now-last)/1000);last=now;tram.position.z=((now/1000*2.6)%118)-59;if(entered&&document.pointerLockElement===renderer.domElement){const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);dir.set(s,0,-f);if(dir.lengthSq()){dir.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw);camera.position.addScaledVector(dir,((keys.ShiftLeft||keys.ShiftRight)?8:5.2)*dt)}camera.position.x=THREE.MathUtils.clamp(camera.position.x,-110,110);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-140,140);camera.rotation.set(pitch,yaw,0,'YXZ')}
+let best=null,bd=999;for(const [id,n] of Object.entries(npcs)){const d=camera.position.distanceTo(new THREE.Vector3(...n.p));if(d<bd){bd=d;best=id}}near=bd<3.2?best:null;if(near&&entered&&document.pointerLockElement===renderer.domElement&&keys.KeyE){keys.KeyE=false;talkTo(near)}
+document.querySelector('#prompt').classList.toggle('hidden',camera.position.distanceTo(evidence.position)>=7||evening);renderer.render(scene,camera)}
+animate(performance.now());updateUI();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
