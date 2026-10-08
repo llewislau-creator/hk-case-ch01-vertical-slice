@@ -2,10 +2,11 @@ import React,{useMemo} from 'react';
 import {Text,useTexture} from '@react-three/drei';
 import * as THREE from 'three';
 
+const assetUrl=(filename)=>`${import.meta.env.BASE_URL}textures/${filename}`;
 const files={plaster:'plaster.svg',concrete:'concrete.svg',wood:'wood.svg',metal:'metal.svg',glass:'glass.svg',sign:'sign.svg',rust:'rust.svg',tile:'tile.svg'};
 
 function Tex({kind,color='#fff',repeat=[1,1],roughness=.9,metalness=0,transparent=false,opacity=1,emissive,emissiveIntensity=0}){
-  const base=useTexture('./textures/'+files[kind]);
+  const base=useTexture(assetUrl(files[kind]));
   const map=useMemo(()=>{const t=base.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(repeat[0],repeat[1]);t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t},[base,repeat[0],repeat[1]]);
   return <meshStandardMaterial map={map} color={color} roughness={roughness} metalness={metalness} transparent={transparent} opacity={opacity} emissive={emissive} emissiveIntensity={emissiveIntensity}/>;
 }
