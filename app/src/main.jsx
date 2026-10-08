@@ -5,6 +5,7 @@ import {Sky,Text,useTexture} from '@react-three/drei';
 import {Physics,RigidBody,CapsuleCollider,CuboidCollider} from '@react-three/rapier';
 import * as THREE from 'three';
 import './styles.css';
+import HeroBuilding from './HeroBuilding.jsx';
 
 const EVID=new THREE.Vector3(11.7,.5,4);
 const NPCS={
@@ -40,7 +41,7 @@ function Shop({z,label,body,accent}){
 
 function HeroStreet({evening}){
  const shops=[
-  [70,'永生茶室','#b59b82','#7e4334'],[42,'德昌雜貨','#b3aa95','#5c6e5d'],[14,'南華布行','#a99a85','#3d5f6e'],
+  [70,'永生茶室','#b59b82','#7e4334'],[42,'德昌雜貨','#b3aa95','#5c6e5d'],
   [-14,'大同理髮','#b7a68d','#784d53'],[-42,'環球藥房','#b0a18d','#6d5b38'],[-70,'幸福冰室','#a99e89','#54677e'],[-98,'光明照相','#b4a791','#56446b']
  ];
  const crowd=[[13.1,0,8.2],[14.6,0,7.6],[12.1,0,6.5],[15.3,0,5.9],[17,0,8.8],[18,0,7],[19,0,5.6],[16.2,0,4.9]];
@@ -57,6 +58,7 @@ function HeroStreet({evening}){
    <mesh position={[39.75,.17,0]}><boxGeometry args={[.24,.26,228]}/><Mat color="#a8a293"/></mesh>
 
    {shops.map((s,i)=><Shop key={i} z={s[0]} label={s[1]} body={s[2]} accent={s[3]}/>)}
+   <HeroBuilding position={[57.8,0,14]} evening={evening}/>}
 
    {[-86,-54,-22,10,42,74].map(z=><group key={z} position={[15.7,0,z]}><mesh castShadow position={[0,3.9,0]}><cylinderGeometry args={[.08,.1,7.8,10]}/><Mat color="#695f55"/></mesh><mesh position={[8.9,6.85,0]}><boxGeometry args={[16.8,.03,.03]}/><Mat color="#666" metalness={.25} roughness={.7}/></mesh></group>)}
    {[24.6,26.4].map((x,i)=><mesh key={i} position={[x,6.8,-2]}><boxGeometry args={[.035,.035,208]}/><Mat color="#666" metalness={.3} roughness={.7}/></mesh>)}
@@ -133,7 +135,7 @@ function App(){
  const first=has('cleaner')&&has('visibility')&&has('box');const second=has('identity')&&has('contact')&&has('tram')&&has('gap')&&evening;
  const controls=entered&&!cinematic&&!book&&!talk&&!complete;const nearEvidence=new THREE.Vector3(...pos).distanceTo(EVID)<7;
  return <main className="game">
-  {(load||!entered)&&<div className="loading"><div className="panel"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><h1>CASE 001</h1><p>跑馬地／1974 · Environment Production Pass 05</p><div className="bar"><i/></div><button disabled={load} onClick={()=>{setEntered(true);setCinematic(true)}}>{load?'重建中…':'進入案件'}</button></div></div>}
+  {(load||!entered)&&<div className="loading"><div className="panel"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><h1>CASE 001</h1><p>跑馬地／1974 · After the Flood Production Pass</p><div className="bar"><i/></div><button disabled={load} onClick={()=>{setEntered(true);setCinematic(true)}}>{load?'重建中…':'進入案件'}</button></div></div>}
   {complete&&<div className="complete"><div className="panel"><div className="eyebrow">CHAPTER 01 COMPLETE</div><h1>調查仍未結束</h1><p>你已確認紙盒曾被搬運，並把總站之後的確切路線保留為 Unknown。</p><button onClick={()=>setComplete(false)}>返回街道</button></div></div>}
   <Scene evening={evening} cinematic={cinematic} pos={pos} setPos={setPos} controls={controls} setNear={setNear}/>
   <section className="hud"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><b>CASE 001 / 跑馬地 / 1974</b><p>{evening?'12/16 傍晚重建：確認最後可信位置':'12/17 現場：沿黃泥涌道調查紙盒現場'}</p><div className="progress"><i style={{width:Math.min(100,(clues.length/7)*100)+'%'}}/></div></section>
