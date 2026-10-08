@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {Canvas,useFrame} from '@react-three/fiber';
-import {Sky,Text} from '@react-three/drei';
+import {Sky,Text,useTexture} from '@react-three/drei';
 import {Physics,RigidBody,CapsuleCollider,CuboidCollider} from '@react-three/rapier';
 import * as THREE from 'three';
 import './styles.css';
@@ -14,17 +14,18 @@ const NPCS={
 };
 const SAVE='hk-case-ch01-artpass04';
 
-function Mat({color,roughness=.9,metalness=0,transparent=false,opacity=1,emissive,emissiveIntensity}){return <meshStandardMaterial color={color} roughness={roughness} metalness={metalness} transparent={transparent} opacity={opacity} emissive={emissive} emissiveIntensity={emissiveIntensity}/>}
+const textureFiles={asphalt:'asphalt.svg',concrete:'concrete.svg',plaster:'plaster.svg',wood:'wood.svg',metal:'metal.svg',sign:'sign.svg',glass:'glass.svg'};
+function Mat({color='#ffffff',texture,roughness=.9,metalness=0,transparent=false,opacity=1,emissive,emissiveIntensity}){const map=texture?useTexture('./textures/'+textureFiles[texture]):null;return <meshStandardMaterial map={map} color={color} roughness={roughness} metalness={metalness} transparent={transparent} opacity={opacity} emissive={emissive} emissiveIntensity={emissiveIntensity}/>}
 
 function Shop({z,label,body,accent}){
  const xs=[-2.8,0,2.8];
  return <group position={[57.8,0,z]}>
-   <mesh castShadow receiveShadow position={[0,5,0]}><boxGeometry args={[11,10,14]}/><Mat color={body}/></mesh>
-   <mesh castShadow receiveShadow position={[0,1.35,-7.08]}><boxGeometry args={[10.4,2.7,.16]}/><Mat color="#d6cbb8" roughness={.82}/></mesh>
-   <mesh castShadow position={[0,3.0,-7.35]}><boxGeometry args={[10.1,.85,.28]}/><Mat color={accent} roughness={.78}/></mesh>
+   <mesh castShadow receiveShadow position={[0,5,0]}><boxGeometry args={[11,10,14]}/><Mat color={body} texture="plaster"/></mesh>
+   <mesh castShadow receiveShadow position={[0,1.35,-7.08]}><boxGeometry args={[10.4,2.7,.16]}/><Mat color="#d6cbb8" texture="concrete" roughness={.82}/></mesh>
+   <mesh castShadow position={[0,3.0,-7.35]}><boxGeometry args={[10.1,.85,.28]}/><Mat color={accent} texture="sign" roughness={.78}/></mesh>
    <Text position={[0,3.02,-7.52]} fontSize={.46} color="#f4dfad" anchorX="center">{label}</Text>
-   {xs.map((x,i)=><group key={i} position={[x,6.15,-7.12]}><mesh><boxGeometry args={[2.05,2.2,.08]}/><Mat color="#625447"/></mesh><mesh position={[0,0,.055]}><boxGeometry args={[1.64,1.82,.03]}/><Mat color="#91a9b5" roughness={.08} metalness={.08} transparent opacity={.48}/></mesh></group>)}
-   <mesh castShadow position={[0,3.62,-8.15]} rotation={[.1,0,0]}><boxGeometry args={[10.2,.12,2.3]}/><Mat color="#6e7c89" roughness={.72}/></mesh>
+   {xs.map((x,i)=><group key={i} position={[x,6.15,-7.12]}><mesh><boxGeometry args={[2.05,2.2,.08]}/><Mat color="#625447" texture="wood"/></mesh><mesh position={[0,0,.055]}><boxGeometry args={[1.64,1.82,.03]}/><Mat color="#c5d6de" texture="glass" roughness={.08} metalness={.08} transparent opacity={.48}/></mesh></group>)}
+   <mesh castShadow position={[0,3.62,-8.15]} rotation={[.1,0,0]}><boxGeometry args={[10.2,.12,2.3]}/><Mat color="#6e7c89" texture="metal" roughness={.72}/></mesh>
    <mesh position={[0,1.1,-7.22]}><boxGeometry args={[8.2,1.55,.05]}/><Mat color="#e9dcc1" transparent opacity={.18} emissive="#9b6a35" emissiveIntensity={.24}/></mesh>
    <pointLight position={[0,1.9,-6.4]} intensity={.16} distance={10} color="#dfa45e"/>
  </group>
@@ -38,12 +39,12 @@ function HeroStreet({evening}){
  const crowd=[[13.1,0,8.2],[14.6,0,7.6],[12.1,0,6.5],[15.3,0,5.9],[17,0,8.8],[18,0,7],[19,0,5.6],[16.2,0,4.9]];
  return <group>
    <mesh receiveShadow position={[0,-.2,0]}><boxGeometry args={[250,.4,300]}/><Mat color="#847d70"/></mesh>
-   <mesh receiveShadow position={[25,.02,0]}><boxGeometry args={[24,.12,230]}/><Mat color="#454440" roughness={.96}/></mesh>
-   <mesh receiveShadow position={[10.5,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#aea798"/></mesh>
-   <mesh receiveShadow position={[42,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#b7b09e"/></mesh>
+   <mesh receiveShadow position={[25,.02,0]}><boxGeometry args={[24,.12,230]}/><Mat color="#a6a29c" texture="asphalt" roughness={.96}/></mesh>
+   <mesh receiveShadow position={[10.5,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#d0c5b4" texture="concrete"/></mesh>
+   <mesh receiveShadow position={[42,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#d0c5b4" texture="concrete"/></mesh>
    <mesh receiveShadow position={[-57,.01,5]}><boxGeometry args={[95,.12,210]}/><Mat color="#5c744f"/></mesh>
-   {[20.6,29.6].map(x=><mesh key={x} position={[x,.045,-4]}><boxGeometry args={[.08,.025,188]}/><Mat color="#747474" roughness={.45} metalness={.6}/></mesh>)}
-   {Array.from({length:31},(_,i)=>-94+i*6).map(z=><mesh key={z} position={[25.1,.022,z]}><boxGeometry args={[9.4,.035,.16]}/><Mat color="#5e5144"/></mesh>)}
+   {[20.6,29.6].map(x=><mesh key={x} position={[x,.045,-4]}><boxGeometry args={[.08,.025,188]}/><Mat color="#b3b3b3" texture="metal" roughness={.45} metalness={.6}/></mesh>)}
+   {Array.from({length:31},(_,i)=>-94+i*6).map(z=><mesh key={z} position={[25.1,.022,z]}><boxGeometry args={[9.4,.035,.16]}/><Mat color="#8c735c" texture="wood"/></mesh>)}
    {Array.from({length:15},(_,i)=>-100+i*14).map(z=><mesh key={z} position={[22.2,.05,z]}><boxGeometry args={[.16,.012,6.6]}/><Mat color="#d4c49e"/></mesh>)}
    <mesh position={[15.15,.17,0]}><boxGeometry args={[.24,.26,228]}/><Mat color="#968f80"/></mesh>
    <mesh position={[39.75,.17,0]}><boxGeometry args={[.24,.26,228]}/><Mat color="#a8a293"/></mesh>
