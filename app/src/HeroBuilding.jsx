@@ -22,7 +22,7 @@ function AC({x,y,z}){
 function WindowBay({x,y,z,lit=false}){
   return <group position={[x,y,z]}>
     <mesh castShadow><boxGeometry args={[2.25,2.2,.16]}/><Tex kind="wood" color="#5d4b3e" repeat={[2,2]} roughness={.86}/></mesh>
-    <mesh position={[0,0,.1]}><boxGeometry args={[1.78,1.72,.045]}/><Tex kind="glass" color={lit?'#d8caa8':'#a8bcc4'} roughness={.08} metalness={.08} transparent opacity={.55} emissive={lit?'#8c5d2d':undefined} emissiveIntensity={lit?.16:0}/></mesh>
+    <mesh position={[0,0,.1]}><boxGeometry args={[1.78,1.72,.045]}/><Tex kind="glass" color={lit?'#d8caa8':'#a8bcc4'} roughness={.08} metalness={.08} transparent opacity={.55} emissive={lit?'#8c5d2d':undefined} emissiveIntensity={lit ? .16 : 0}/></mesh>
     <mesh position={[0,0,.14]}><boxGeometry args={[.055,1.72,.03]}/><Solid color="#776756" roughness={.7}/></mesh>
     <mesh position={[0,0,.14]}><boxGeometry args={[1.78,.055,.03]}/><Solid color="#776756" roughness={.7}/></mesh>
   </group>
@@ -57,7 +57,7 @@ export default function HeroBuilding({position=[57.8,0,14],evening=false}){
     <mesh castShadow position={[-6.65,5.6,-5.7]}><boxGeometry args={[.22,3.5,1.25]}/><Tex kind="sign" color="#35566a" repeat={[1,3]} roughness={.72}/></mesh>
     <Text position={[-6.78,5.6,-5.7]} rotation={[0,-Math.PI/2,0]} fontSize={.24} color="#f1ddb0" anchorX="center">布行</Text>
 
-    <mesh position={[1.4,.85,-8.0]}><boxGeometry args={[4.9,1.55,.04]}/><Tex kind="glass" color="#d6ddd8" roughness={.07} metalness={.05} transparent opacity={.42} emissive={evening?'#8e5a2d':undefined} emissiveIntensity={evening?.23:0}/></mesh>
+    <mesh position={[1.4,.85,-8.0]}><boxGeometry args={[4.9,1.55,.04]}/><Tex kind="glass" color="#d6ddd8" roughness={.07} metalness={.05} transparent opacity={.42} emissive={evening?'#8e5a2d':undefined} emissiveIntensity={evening ? .23 : 0}/></mesh>
     {evening&&<pointLight position={[1.4,1.8,-6.6]} intensity={.55} distance={11} color="#d99b57"/>}
   </group>
 }
