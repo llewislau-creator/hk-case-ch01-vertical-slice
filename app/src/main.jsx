@@ -14,11 +14,15 @@ const NPCS={
  news:{p:new THREE.Vector3(9.4,0,-58.8),name:'報販／街坊綜合角色',text:'朝早呢段路通常已經開始多人；如果有人搬大型物件，理論上唔算容易完全冇人留意。',clue:'visibility'}
 };
 const SAVE='hk-case-ch01-artpass04';
+const SAVE_INTERVAL_MS=1500;
+const INTERACTION_RADIUS=3.2;
+const EVIDENCE_RADIUS=3.1;
 
 const textureFiles={asphalt:'asphalt.svg',concrete:'concrete.svg',plaster:'plaster.svg',wood:'wood.svg',metal:'metal.svg',sign:'sign.svg',glass:'glass.svg'};
+const assetUrl=(filename)=>`${import.meta.env.BASE_URL}textures/${filename}`;
 const textureRepeat={asphalt:[4,12],concrete:[3,8],plaster:[2,2],wood:[3,1],metal:[2,2],sign:[2,1],glass:[1,1]};
 function TexturedMat({color='#ffffff',texture,repeat,roughness=.9,metalness=0,transparent=false,opacity=1,emissive,emissiveIntensity}){
- const base=useTexture('./textures/'+textureFiles[texture]);
+ const base=useTexture(assetUrl(textureFiles[texture]));
  const map=useMemo(()=>{const t=base.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;const r=repeat||textureRepeat[texture]||[1,1];t.repeat.set(r[0],r[1]);t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t},[base,texture,repeat?.[0],repeat?.[1]]);
  useEffect(()=>()=>map.dispose(),[map]);
  return <meshStandardMaterial map={map} color={color} roughness={roughness} metalness={metalness} transparent={transparent} opacity={opacity} emissive={emissive} emissiveIntensity={emissiveIntensity}/>;
@@ -94,12 +98,12 @@ function Tram(){
 }
 function Traffic(){return <group><Tram/><group position={[33.2,0,56]}><mesh castShadow position={[0,1.15,0]}><boxGeometry args={[2.2,2.3,6.3]}/><Mat color="#8f4b35" roughness={.78}/></mesh><mesh castShadow position={[0,2.65,0]}><boxGeometry args={[2,1.2,6]}/><Mat color="#d6cfba" roughness={.75}/></mesh></group>{[[34.8,0,-52,'#667f90'],[33.1,0,-18,'#7d6a4d'],[34.5,0,26,'#85725f']].map((p,i)=><group key={i} position={p.slice(0,3)}><mesh castShadow position={[0,.55,0]}><boxGeometry args={[1.7,1,3.3]}/><Mat color={p[3]}/></mesh><mesh castShadow position={[0,1.15,-.1]}><boxGeometry args={[1.2,.7,1.6]}/><Mat color={p[3]}/></mesh></group>)}</group>}
 
-function Colliders(){return <RigidBody type="fixed" colliders={false}><CuboidCollider args={[125,.15,150]} position={[0,-.15,0]}/><CuboidCollider args={[.8,.8,107.5]} position={[-7,.7,5]}/>{[70,40,10,-20,-50,-80].map(z=><CuboidCollider key={z} args={[14,12,12]} position={[64,12,z]}/>)}</RigidBody>}
+function Colliders(){return <RigidBody type="fixed" colliders={false}><CuboidCollider args={[125,.15,150]} position={[0,-.15,0]}/><CuboidCollider args={[.12,.65,104]} position={[-8,.65,5]}/><CuboidCollider args={[6.4,5,7.6]} position={[57.8,5,14]}/>{[70,42,-14,-42,-70,-98].map(z=><CuboidCollider key={z} args={[5.5,5,7]} position={[57.8,5,z]}/>)}<CuboidCollider args={[1.4,.9,.75]} position={[44.5,.9,-58.5]}/><CuboidCollider args={[.7,.48,.48]} position={[11.7,.48,4]}/></RigidBody>}
 
-function Player({enabled,cameraEnabled,onPos,initial}){
+function Player({enabled,cameraEnabled,onPosition,initial}){
  const body=useRef(),keys=useRef({}),yaw=useRef(0),pitch=useRef(0);
  useEffect(()=>{const d=e=>keys.current[e.code]=true,u=e=>keys.current[e.code]=false,m=e=>{if(document.pointerLockElement&&enabled){yaw.current-=e.movementX*.0022;pitch.current=THREE.MathUtils.clamp(pitch.current-e.movementY*.0019,-1.25,1.25)}};addEventListener('keydown',d);addEventListener('keyup',u);addEventListener('mousemove',m);return()=>{removeEventListener('keydown',d);removeEventListener('keyup',u);removeEventListener('mousemove',m)}},[enabled]);
- useFrame(({camera})=>{if(!body.current)return;const p=body.current.translation(),k=keys.current;const f=enabled?+!!k.KeyW-+!!k.KeyS:0,s=enabled?+!!k.KeyD-+!!k.KeyA:0;const v=new THREE.Vector3(s,0,-f);const sp=k.ShiftLeft||k.ShiftRight?8:5.2;if(v.lengthSq()){v.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw.current);const l=body.current.linvel();body.current.setLinvel({x:v.x*sp,y:l.y,z:v.z*sp},true)}else{const l=body.current.linvel();body.current.setLinvel({x:0,y:l.y,z:0},true)}if(cameraEnabled){camera.position.set(p.x,p.y+1.48,p.z);camera.rotation.set(pitch.current,yaw.current,0,'YXZ');if(camera.fov!==62){camera.fov=62;camera.updateProjectionMatrix()}}onPos([p.x,p.y,p.z])});
+ useFrame(({camera})=>{if(!body.current)return;const p=body.current.translation(),k=keys.current;const f=enabled?+!!k.KeyW-+!!k.KeyS:0,s=enabled?+!!k.KeyD-+!!k.KeyA:0;const v=new THREE.Vector3(s,0,-f);const sp=k.ShiftLeft||k.ShiftRight?8:5.2;if(v.lengthSq()){v.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw.current);const l=body.current.linvel();body.current.setLinvel({x:v.x*sp,y:l.y,z:v.z*sp},true)}else{const l=body.current.linvel();body.current.setLinvel({x:0,y:l.y,z:0},true)}if(cameraEnabled){camera.position.set(p.x,p.y+1.48,p.z);camera.rotation.set(pitch.current,yaw.current,0,'YXZ');if(camera.fov!==62){camera.fov=62;camera.updateProjectionMatrix()}}onPosition(p.x,p.y,p.z)});
  return <RigidBody ref={body} colliders={false} enabledRotations={[false,false,false]} position={initial} linearDamping={8} friction={.8}><CapsuleCollider args={[.55,.34]} position={[0,.85,0]}/></RigidBody>
 }
 
@@ -111,7 +115,7 @@ function Cinematic({active}){
  return null
 }
 
-function Scene({evening,cinematic,pos,setPos,controls,setNear}){
+function Scene({evening,cinematic,initialPosition,controls,onPosition}){
  const mobile=typeof window!=='undefined'&&window.matchMedia?.('(pointer:coarse)').matches;
  return <Canvas shadows dpr={mobile?1:[1,1.5]} gl={{antialias:true,powerPreference:'high-performance'}} camera={{position:[32,2.6,-112],fov:62}} onCreated={({gl})=>{gl.outputColorSpace=THREE.SRGBColorSpace;gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=evening?.9:1.03}} onPointerDown={e=>controls&&e.gl.domElement.requestPointerLock?.()}>
   <color attach="background" args={[evening?'#7b6a61':'#d0c5b5']}/><fog attach="fog" args={[evening?'#7b6a61':'#d0c5b5',evening?24:42,evening?122:162]}/>
@@ -121,23 +125,38 @@ function Scene({evening,cinematic,pos,setPos,controls,setNear}){
   {evening&&<><pointLight position={[55,2.8,12]} intensity={.55} distance={18} color="#d99251"/><pointLight position={[55.2,2.8,-43]} intensity={.5} distance={16} color="#d99251"/></>}
   <Sky distance={450000} sunPosition={evening?[-.8,.12,-.5]:[.2,.45,.15]} turbidity={evening?13:9} rayleigh={evening?4.6:2.8} mieCoefficient={evening?.013:.009} mieDirectionalG={.82}/>
   <Cinematic active={cinematic}/>
-  <Physics gravity={[0,-9.81,0]}><HeroStreet evening={evening}/><Traffic/><Colliders/><Player enabled={controls} cameraEnabled={!cinematic} initial={pos} onPos={p=>{setPos(p);const pp=new THREE.Vector3(...p);const n=Object.entries(NPCS).map(([id,o])=>[id,pp.distanceTo(o.p)]).sort((x,y)=>x[1]-y[1])[0];setNear(n&&n[1]<3.2?n[0]:null)}}/></Physics>
+  <Physics gravity={[0,-9.81,0]}><HeroStreet evening={evening}/><Traffic/><Colliders/><Player enabled={controls} cameraEnabled={!cinematic} initial={initialPosition} onPosition={onPosition}/></Physics>
  </Canvas>
 }
 
 function App(){
  const saved=useMemo(()=>{try{return JSON.parse(localStorage.getItem(SAVE)||'{}')}catch{return{}}},[]);
- const [load,setLoad]=useState(true),[entered,setEntered]=useState(false),[cinematic,setCinematic]=useState(false),[pos,setPos]=useState(saved.pos||[32,1.1,-112]),[clues,setClues]=useState(saved.clues||[]),[near,setNear]=useState(null),[talk,setTalk]=useState(null),[book,setBook]=useState(false),[evening,setEvening]=useState(!!saved.evening),[complete,setComplete]=useState(false);
+ const initialPosition=useMemo(()=>Array.isArray(saved.pos)&&saved.pos.length===3&&saved.pos.every(Number.isFinite)?saved.pos:[32,1.1,-112],[saved]);
+ const livePosition=useRef(initialPosition);
+ const lastSave=useRef(0);
+ const [load,setLoad]=useState(true),[entered,setEntered]=useState(false),[cinematic,setCinematic]=useState(false),[near,setNear]=useState(null),[nearEvidence,setNearEvidence]=useState(false),[clues,setClues]=useState(saved.clues||[]),[talk,setTalk]=useState(null),[book,setBook]=useState(false),[evening,setEvening]=useState(!!saved.evening),[complete,setComplete]=useState(false);
+ const onPosition=useRef(null);
+ onPosition.current=(x,y,z)=>{
+  livePosition.current=[x,y,z];
+  const now=performance.now();
+  if(now-lastSave.current<SAVE_INTERVAL_MS)return;
+  lastSave.current=now;
+  const closeNpc=Object.entries(NPCS).find(([,npc])=>Math.hypot(x-npc.p.x,y-npc.p.y,z-npc.p.z)<INTERACTION_RADIUS)?.[0]??null;
+  setNear(old=>old===closeNpc?old:closeNpc);
+  const evidenceClose=Math.hypot(x-EVID.x,y-EVID.y,z-EVID.z)<EVIDENCE_RADIUS;
+  setNearEvidence(old=>old===evidenceClose?old:evidenceClose);
+ };
+ const handlePosition=useMemo(()=>((x,y,z)=>onPosition.current?.(x,y,z)),[]);
  useEffect(()=>{const t=setTimeout(()=>setLoad(false),1000);return()=>clearTimeout(t)},[]);
  useEffect(()=>{if(!cinematic)return;const t=setTimeout(()=>setCinematic(false),7600);return()=>clearTimeout(t)},[cinematic]);
- useEffect(()=>{localStorage.setItem(SAVE,JSON.stringify({pos,clues,evening}))},[pos,clues,evening]);
+ useEffect(()=>{localStorage.setItem(SAVE,JSON.stringify({pos:livePosition.current,clues,evening}))},[clues,evening]);
  const add=x=>setClues(c=>c.includes(x)?c:[...c,x]);const has=x=>clues.includes(x);
  const first=has('cleaner')&&has('visibility')&&has('box');const second=has('identity')&&has('contact')&&has('tram')&&has('gap')&&evening;
- const controls=entered&&!cinematic&&!book&&!talk&&!complete;const nearEvidence=new THREE.Vector3(...pos).distanceTo(EVID)<7;
+ const controls=entered&&!cinematic&&!book&&!talk&&!complete;
  return <main className="game">
   {(load||!entered)&&<div className="loading"><div className="panel"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><h1>CASE 001</h1><p>跑馬地／1974 · After the Flood Production Pass</p><div className="bar"><i/></div><button disabled={load} onClick={()=>{setEntered(true);setCinematic(true)}}>{load?'重建中…':'進入案件'}</button></div></div>}
   {complete&&<div className="complete"><div className="panel"><div className="eyebrow">CHAPTER 01 COMPLETE</div><h1>調查仍未結束</h1><p>你已確認紙盒曾被搬運，並把總站之後的確切路線保留為 Unknown。</p><button onClick={()=>setComplete(false)}>返回街道</button></div></div>}
-  <Scene evening={evening} cinematic={cinematic} pos={pos} setPos={setPos} controls={controls} setNear={setNear}/>
+  <Scene evening={evening} cinematic={cinematic} initialPosition={initialPosition} controls={controls} onPosition={handlePosition}/>
   <section className="hud"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><b>CASE 001 / 跑馬地 / 1974</b><p>{evening?'12/16 傍晚重建：確認最後可信位置':'12/17 現場：沿黃泥涌道調查紙盒現場'}</p><div className="progress"><i style={{width:Math.min(100,(clues.length/7)*100)+'%'}}/></div></section>
   <div className="tools"><button onClick={()=>{document.exitPointerLock?.();setBook(true)}}>案件簿</button>{first&&!evening&&<button onClick={()=>setEvening(true)}>傍晚重建</button>}</div>
   <div className="help">WASD 移動 · Shift 快走 · 滑鼠視角 · E 與附近人物對話</div><div className="cross"/>
