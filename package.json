@@ -7,7 +7,9 @@
     "build": "vite build",
     "dev": "vite",
     "test": "node --test tests/*.test.js",
-    "check": "npm run test && npm run build"
+    "check": "npm run test && npm run build",
+    "preview": "vite preview",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@react-three/drei": "^9.121.4",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "@playwright/test": "^1.56.0"
   }
 }
