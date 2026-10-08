@@ -1,0 +1,28 @@
+name: Week 01 Development CI
+on:
+  push:
+    branches:
+      - dev/week01-stabilization-20261008
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Test gameplay logic
+        run: npm run test
+      - name: Production build (no deploy)
+        run: npm run build
+      - name: Assert output files
+        run: |
+          test -f dist/index.html
+          test -f dist/textures/plaster.svg
+          test -f dist/textures/rust.svg
+          test -f dist/textures/tile.svg
