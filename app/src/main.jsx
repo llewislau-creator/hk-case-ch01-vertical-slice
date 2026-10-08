@@ -109,7 +109,8 @@ function Cinematic({active}){
  return null
 }
 
-function Scene({evening,cinematic,pos,setPos,controls,setNear}){\n const mobile=typeof window!=='undefined'&&window.matchMedia?.('(pointer:coarse)').matches;
+function Scene({evening,cinematic,pos,setPos,controls,setNear}){
+ const mobile=typeof window!=='undefined'&&window.matchMedia?.('(pointer:coarse)').matches;
  return <Canvas shadows dpr={mobile?1:[1,1.5]} gl={{antialias:true,powerPreference:'high-performance'}} camera={{position:[32,2.6,-112],fov:62}} onCreated={({gl})=>{gl.outputColorSpace=THREE.SRGBColorSpace;gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=evening?.9:1.03}} onPointerDown={e=>controls&&e.gl.domElement.requestPointerLock?.()}>
   <color attach="background" args={[evening?'#7b6a61':'#d0c5b5']}/><fog attach="fog" args={[evening?'#7b6a61':'#d0c5b5',evening?24:42,evening?122:162]}/>
   <ambientLight intensity={evening?.38:.82}/><hemisphereLight intensity={evening?.4:.56} color={evening?'#f0d3a5':'#d9e5f2'} groundColor={evening?'#4d4338':'#5e6757'}/>
