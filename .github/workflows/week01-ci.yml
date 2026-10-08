@@ -26,3 +26,16 @@ jobs:
           test -f dist/textures/plaster.svg
           test -f dist/textures/rust.svg
           test -f dist/textures/tile.svg
+      - name: Install Chromium for browser smoke
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke against production preview
+        run: npm run test:browser
+      - name: Upload browser smoke evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke-results
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
