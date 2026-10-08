@@ -1,0 +1,21 @@
+import {test,expect} from '@playwright/test';
+test('production game boots and casebook works',async ({page})=>{
+ const errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ const failedAssets=[];
+ page.on('response',r=>{if(r.status()>=400&&/textures|assets|\.glb/.test(r.url()))failedAssets.push(r.url()+': '+r.status());});
+ await page.goto('/');
+ await expect(page).toHaveTitle(/香港奇案/);
+ await expect(page.locator('canvas')).toBeVisible({timeout:30000});
+ await page.getByRole('button',{name:'進入案件'}).click();
+ await expect(page.getByText('黃泥涌道重建層')).toBeVisible();
+ await page.getByRole('button',{name:'略過鏡頭'}).click();
+ await page.getByRole('button',{name:'案件簿'}).click();
+ await expect(page.getByText('跑馬地檔案：紙盒')).toBeVisible();
+ await page.getByRole('button',{name:/D01 身份/}).click();
+ await expect(page.getByText('identity',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'關閉'}).click();
+ await expect(page.locator('canvas')).toBeVisible();
+ expect(failedAssets).toEqual([]);
+ expect(errors).toEqual([]);
+});
