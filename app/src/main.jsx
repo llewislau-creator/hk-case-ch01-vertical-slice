@@ -6,6 +6,7 @@ import {Physics,RigidBody,CapsuleCollider,CuboidCollider} from '@react-three/rap
 import * as THREE from 'three';
 import './styles.css';
 import HeroBuilding from './HeroBuilding.jsx';
+import {closestNpc,isEvidenceNearby,validPosition} from './gameplay.js';
 
 const EVID=new THREE.Vector3(11.7,.5,4);
 const NPCS={
@@ -131,7 +132,7 @@ function Scene({evening,cinematic,initialPosition,controls,onPosition}){
 
 function App(){
  const saved=useMemo(()=>{try{return JSON.parse(localStorage.getItem(SAVE)||'{}')}catch{return{}}},[]);
- const initialPosition=useMemo(()=>Array.isArray(saved.pos)&&saved.pos.length===3&&saved.pos.every(Number.isFinite)?saved.pos:[32,1.1,-112],[saved]);
+ const initialPosition=useMemo(()=>validPosition(saved.pos)?saved.pos:[32,1.1,-112],[saved]);
  const livePosition=useRef(initialPosition);
  const lastSave=useRef(0);
  const [load,setLoad]=useState(true),[entered,setEntered]=useState(false),[cinematic,setCinematic]=useState(false),[near,setNear]=useState(null),[nearEvidence,setNearEvidence]=useState(false),[clues,setClues]=useState(saved.clues||[]),[talk,setTalk]=useState(null),[book,setBook]=useState(false),[evening,setEvening]=useState(!!saved.evening),[complete,setComplete]=useState(false);
@@ -141,15 +142,15 @@ function App(){
   const now=performance.now();
   if(now-lastSave.current<SAVE_INTERVAL_MS)return;
   lastSave.current=now;
-  const closeNpc=Object.entries(NPCS).find(([,npc])=>Math.hypot(x-npc.p.x,y-npc.p.y,z-npc.p.z)<INTERACTION_RADIUS)?.[0]??null;
+  const closeNpc=closestNpc(x,y,z,NPCS,INTERACTION_RADIUS);
   setNear(old=>old===closeNpc?old:closeNpc);
-  const evidenceClose=Math.hypot(x-EVID.x,y-EVID.y,z-EVID.z)<EVIDENCE_RADIUS;
+  const evidenceClose=isEvidenceNearby(x,y,z,EVID,EVIDENCE_RADIUS);
   setNearEvidence(old=>old===evidenceClose?old:evidenceClose);
  };
  const handlePosition=useMemo(()=>((x,y,z)=>onPosition.current?.(x,y,z)),[]);
  useEffect(()=>{const t=setTimeout(()=>setLoad(false),1000);return()=>clearTimeout(t)},[]);
  useEffect(()=>{if(!cinematic)return;const t=setTimeout(()=>setCinematic(false),7600);return()=>clearTimeout(t)},[cinematic]);
- useEffect(()=>{localStorage.setItem(SAVE,JSON.stringify({pos:livePosition.current,clues,evening}))},[clues,evening]);
+ useEffect(()=>{const persist=()=>{try{localStorage.setItem(SAVE,JSON.stringify({pos:livePosition.current,clues,evening}))}catch(error){console.warn('Save unavailable',error)}};persist();const timer=window.setInterval(persist,3000);window.addEventListener('pagehide',persist);return()=>{window.clearInterval(timer);window.removeEventListener('pagehide',persist)}},[clues,evening]);
  const add=x=>setClues(c=>c.includes(x)?c:[...c,x]);const has=x=>clues.includes(x);
  const first=has('cleaner')&&has('visibility')&&has('box');const second=has('identity')&&has('contact')&&has('tram')&&has('gap')&&evening;
  const controls=entered&&!cinematic&&!book&&!talk&&!complete;
