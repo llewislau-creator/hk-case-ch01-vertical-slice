@@ -15,14 +15,21 @@ const NPCS={
 const SAVE='hk-case-ch01-artpass04';
 
 const textureFiles={asphalt:'asphalt.svg',concrete:'concrete.svg',plaster:'plaster.svg',wood:'wood.svg',metal:'metal.svg',sign:'sign.svg',glass:'glass.svg'};
-function Mat({color='#ffffff',texture,roughness=.9,metalness=0,transparent=false,opacity=1,emissive,emissiveIntensity}){const map=texture?useTexture('./textures/'+textureFiles[texture]):null;return <meshStandardMaterial map={map} color={color} roughness={roughness} metalness={metalness} transparent={transparent} opacity={opacity} emissive={emissive} emissiveIntensity={emissiveIntensity}/>}
+const textureRepeat={asphalt:[4,12],concrete:[3,8],plaster:[2,2],wood:[3,1],metal:[2,2],sign:[2,1],glass:[1,1]};
+function TexturedMat({color='#ffffff',texture,repeat,roughness=.9,metalness=0,transparent=false,opacity=1,emissive,emissiveIntensity}){
+ const base=useTexture('./textures/'+textureFiles[texture]);
+ const map=useMemo(()=>{const t=base.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;const r=repeat||textureRepeat[texture]||[1,1];t.repeat.set(r[0],r[1]);t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t},[base,texture,repeat?.[0],repeat?.[1]]);
+ useEffect(()=>()=>map.dispose(),[map]);
+ return <meshStandardMaterial map={map} color={color} roughness={roughness} metalness={metalness} transparent={transparent} opacity={opacity} emissive={emissive} emissiveIntensity={emissiveIntensity}/>;
+}
+function Mat(props){return props.texture?<TexturedMat {...props}/>:<meshStandardMaterial color={props.color||'#ffffff'} roughness={props.roughness??.9} metalness={props.metalness??0} transparent={props.transparent||false} opacity={props.opacity??1} emissive={props.emissive} emissiveIntensity={props.emissiveIntensity}/>}
 
 function Shop({z,label,body,accent}){
  const xs=[-2.8,0,2.8];
  return <group position={[57.8,0,z]}>
    <mesh castShadow receiveShadow position={[0,5,0]}><boxGeometry args={[11,10,14]}/><Mat color={body} texture="plaster"/></mesh>
    <mesh castShadow receiveShadow position={[0,1.35,-7.08]}><boxGeometry args={[10.4,2.7,.16]}/><Mat color="#d6cbb8" texture="concrete" roughness={.82}/></mesh>
-   <mesh castShadow position={[0,3.0,-7.35]}><boxGeometry args={[10.1,.85,.28]}/><Mat color={accent} texture="sign" roughness={.78}/></mesh>
+   <mesh castShadow position={[0,3.0,-7.35]}><boxGeometry args={[10.1,.85,.28]}/><Mat color={accent} texture="sign" repeat={[3,1]} roughness={.78}/></mesh>
    <Text position={[0,3.02,-7.52]} fontSize={.46} color="#f4dfad" anchorX="center">{label}</Text>
    {xs.map((x,i)=><group key={i} position={[x,6.15,-7.12]}><mesh><boxGeometry args={[2.05,2.2,.08]}/><Mat color="#625447" texture="wood"/></mesh><mesh position={[0,0,.055]}><boxGeometry args={[1.64,1.82,.03]}/><Mat color="#c5d6de" texture="glass" roughness={.08} metalness={.08} transparent opacity={.48}/></mesh></group>)}
    <mesh castShadow position={[0,3.62,-8.15]} rotation={[.1,0,0]}><boxGeometry args={[10.2,.12,2.3]}/><Mat color="#6e7c89" texture="metal" roughness={.72}/></mesh>
@@ -39,12 +46,12 @@ function HeroStreet({evening}){
  const crowd=[[13.1,0,8.2],[14.6,0,7.6],[12.1,0,6.5],[15.3,0,5.9],[17,0,8.8],[18,0,7],[19,0,5.6],[16.2,0,4.9]];
  return <group>
    <mesh receiveShadow position={[0,-.2,0]}><boxGeometry args={[250,.4,300]}/><Mat color="#847d70"/></mesh>
-   <mesh receiveShadow position={[25,.02,0]}><boxGeometry args={[24,.12,230]}/><Mat color="#a6a29c" texture="asphalt" roughness={.96}/></mesh>
-   <mesh receiveShadow position={[10.5,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#d0c5b4" texture="concrete"/></mesh>
+   <mesh receiveShadow position={[25,.02,0]}><boxGeometry args={[24,.12,230]}/><Mat color="#a6a29c" texture="asphalt" repeat={[5,42]} roughness={.96}/></mesh>
+   <mesh receiveShadow position={[10.5,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#d0c5b4" texture="concrete" repeat={[3,40]}/></mesh>
    <mesh receiveShadow position={[42,.08,0]}><boxGeometry args={[10,.06,230]}/><Mat color="#d0c5b4" texture="concrete"/></mesh>
    <mesh receiveShadow position={[-57,.01,5]}><boxGeometry args={[95,.12,210]}/><Mat color="#5c744f"/></mesh>
-   {[20.6,29.6].map(x=><mesh key={x} position={[x,.045,-4]}><boxGeometry args={[.08,.025,188]}/><Mat color="#b3b3b3" texture="metal" roughness={.45} metalness={.6}/></mesh>)}
-   {Array.from({length:31},(_,i)=>-94+i*6).map(z=><mesh key={z} position={[25.1,.022,z]}><boxGeometry args={[9.4,.035,.16]}/><Mat color="#8c735c" texture="wood"/></mesh>)}
+   {[20.6,29.6].map(x=><mesh key={x} position={[x,.045,-4]}><boxGeometry args={[.08,.025,188]}/><Mat color="#b3b3b3" texture="metal" repeat={[1,48]} roughness={.45} metalness={.6}/></mesh>)}
+   {Array.from({length:31},(_,i)=>-94+i*6).map(z=><mesh key={z} position={[25.1,.022,z]}><boxGeometry args={[9.4,.035,.16]}/><Mat color="#8c735c" texture="wood" repeat={[7,1]}/></mesh>)}
    {Array.from({length:15},(_,i)=>-100+i*14).map(z=><mesh key={z} position={[22.2,.05,z]}><boxGeometry args={[.16,.012,6.6]}/><Mat color="#d4c49e"/></mesh>)}
    <mesh position={[15.15,.17,0]}><boxGeometry args={[.24,.26,228]}/><Mat color="#968f80"/></mesh>
    <mesh position={[39.75,.17,0]}><boxGeometry args={[.24,.26,228]}/><Mat color="#a8a293"/></mesh>
@@ -102,11 +109,11 @@ function Cinematic({active}){
  return null
 }
 
-function Scene({evening,cinematic,pos,setPos,controls,setNear}){
- return <Canvas shadows dpr={[1,1.5]} gl={{antialias:true,powerPreference:'high-performance'}} camera={{position:[32,2.6,-112],fov:62}} onCreated={({gl})=>{gl.outputColorSpace=THREE.SRGBColorSpace;gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=evening?.9:1.03}} onPointerDown={e=>controls&&e.gl.domElement.requestPointerLock?.()}>
+function Scene({evening,cinematic,pos,setPos,controls,setNear}){\n const mobile=typeof window!=='undefined'&&window.matchMedia?.('(pointer:coarse)').matches;
+ return <Canvas shadows dpr={mobile?1:[1,1.5]} gl={{antialias:true,powerPreference:'high-performance'}} camera={{position:[32,2.6,-112],fov:62}} onCreated={({gl})=>{gl.outputColorSpace=THREE.SRGBColorSpace;gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=evening?.9:1.03}} onPointerDown={e=>controls&&e.gl.domElement.requestPointerLock?.()}>
   <color attach="background" args={[evening?'#7b6a61':'#d0c5b5']}/><fog attach="fog" args={[evening?'#7b6a61':'#d0c5b5',evening?24:42,evening?122:162]}/>
   <ambientLight intensity={evening?.38:.82}/><hemisphereLight intensity={evening?.4:.56} color={evening?'#f0d3a5':'#d9e5f2'} groundColor={evening?'#4d4338':'#5e6757'}/>
-  <directionalLight castShadow position={evening?[-25,18,-40]:[45,70,-30]} intensity={evening?1.34:2.28} color={evening?'#d49b71':'#fff7e6'} shadow-mapSize-width={2048} shadow-mapSize-height={2048} shadow-bias={-.0002}/>
+  <directionalLight castShadow position={evening?[-25,18,-40]:[45,70,-30]} intensity={evening?1.34:2.28} color={evening?'#d49b71':'#fff7e6'} shadow-mapSize-width={mobile?1024:2048} shadow-mapSize-height={mobile?1024:2048} shadow-bias={-.0002}/>
   <directionalLight position={evening?[28,10,22]:[-12,18,55]} intensity={evening?.3:.34} color={evening?'#9d6f52':'#97aeca'}/>
   {evening&&<><pointLight position={[55,2.8,12]} intensity={.55} distance={18} color="#d99251"/><pointLight position={[55.2,2.8,-43]} intensity={.5} distance={16} color="#d99251"/></>}
   <Sky distance={450000} sunPosition={evening?[-.8,.12,-.5]:[.2,.45,.15]} turbidity={evening?13:9} rayleigh={evening?4.6:2.8} mieCoefficient={evening?.013:.009} mieDirectionalG={.82}/>
@@ -125,7 +132,7 @@ function App(){
  const first=has('cleaner')&&has('visibility')&&has('box');const second=has('identity')&&has('contact')&&has('tram')&&has('gap')&&evening;
  const controls=entered&&!cinematic&&!book&&!talk&&!complete;const nearEvidence=new THREE.Vector3(...pos).distanceTo(EVID)<7;
  return <main className="game">
-  {(load||!entered)&&<div className="loading"><div className="panel"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><h1>CASE 001</h1><p>跑馬地／1974 · Environment Production Pass 04</p><div className="bar"><i/></div><button disabled={load} onClick={()=>{setEntered(true);setCinematic(true)}}>{load?'重建中…':'進入案件'}</button></div></div>}
+  {(load||!entered)&&<div className="loading"><div className="panel"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><h1>CASE 001</h1><p>跑馬地／1974 · Environment Production Pass 05</p><div className="bar"><i/></div><button disabled={load} onClick={()=>{setEntered(true);setCinematic(true)}}>{load?'重建中…':'進入案件'}</button></div></div>}
   {complete&&<div className="complete"><div className="panel"><div className="eyebrow">CHAPTER 01 COMPLETE</div><h1>調查仍未結束</h1><p>你已確認紙盒曾被搬運，並把總站之後的確切路線保留為 Unknown。</p><button onClick={()=>setComplete(false)}>返回街道</button></div></div>}
   <Scene evening={evening} cinematic={cinematic} pos={pos} setPos={setPos} controls={controls} setNear={setNear}/>
   <section className="hud"><div className="eyebrow">HONG KONG CASE ARCHIVE</div><b>CASE 001 / 跑馬地 / 1974</b><p>{evening?'12/16 傍晚重建：確認最後可信位置':'12/17 現場：沿黃泥涌道調查紙盒現場'}</p><div className="progress"><i style={{width:Math.min(100,(clues.length/7)*100)+'%'}}/></div></section>
