@@ -49,6 +49,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Upload static build for browser QA
+        # Artifact storage can transiently reset connections; do not mislabel gameplay tests as failed.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: silent-box-greybox-pass02-dist
