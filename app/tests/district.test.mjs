@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {SPAWN,STAIRS,roofAllowed,groundAllowed,canStep,pathSample,makeStairPath,nearby,cameraBoom} from '../src/district-nav.mjs';
-function walk(p,route,mode='ground',caseBarrier=false){let from={...p};for(const [x,z] of route){const dx=x-from.x,dz=z-from.z,n=Math.ceil(Math.hypot(dx,dz)/.045);for(let i=0;i<n;i++){const step=canStep(from,dx/n,dz/n,mode,caseBarrier);assert.ok(Math.hypot(step.x-(from.x+dx/n),step.z-(from.z+dz/n))<.09,'blocked at '+JSON.stringify(from));from={...from,...step};}}return from;}
+function walk(p,route,mode='ground',caseBarrier=false){let from={...p};for(const [x,z] of route){const dx=x-from.x,dz=z-from.z,n=Math.ceil(Math.hypot(dx,dz)/.045);for(let i=0;i<n;i++){const step=canStep(from,dx/n,dz/n,mode,caseBarrier);assert.ok(Math.hypot(step.x-(from.x+dx/n),step.z-(from.z+dz/n))<.008,'blocked at '+JSON.stringify(from));from={...from,...step};}}return from;}
 test('P0 to West rear alley and stair door',()=>{const p=walk(SPAWN,[[96,60],[96,92],[107,92],[107,94]]);assert.ok(p.z>93.8)});
 test('P0 enters South China fabric shop through its door',()=>{const p=walk(SPAWN,[[31,60],[31,62],[31,76]]);assert.ok(p.z>75.8)});
 test('electrical appliance store usable interior',()=>{const p=walk({x:117,z:60},[[117,68],[117,75]]);assert.ok(p.z>74.8)});
