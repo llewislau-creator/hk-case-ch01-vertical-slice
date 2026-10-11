@@ -36,6 +36,18 @@ jobs:
           test -s dist/textures/metal.svg
           test -s dist/textures/sign.svg
           test -s dist/textures/glass.svg
+      - name: Install browser automation library
+        run: npm install --no-save playwright-core --no-audit --no-fund
+      - name: Chrome WebGL smoke and movement
+        run: node app/tests/browser-smoke.mjs
+      - name: Upload browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: silent-box-pass02-browser-screenshots
+          path: qa-screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload static build for browser QA
         uses: actions/upload-artifact@v4
         with:
