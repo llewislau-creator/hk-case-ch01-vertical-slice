@@ -60,10 +60,10 @@ export function groundAllowed(x,z,prev=null,caseBarrier=false){
  return false;
 }
 export function roofAllowed(x,z){
- for(const br of BRIDGES)if(inRect(x,z,br,.10))return true;
+ for(const br of BRIDGES)if(x>=br.x-.35&&x<=br.x+br.w+.35&&z>=br.z-.15&&z<=br.z+br.d+.15)return true;
  for(const r of ROOFS){
   const bridgeMouth=between(z,109.30,110.95);
-  if(inRect(x,z,r,bridgeMouth?.18:1.15))return true;
+  if(inRect(x,z,r,bridgeMouth?.05:1.15))return true;
  }
  return false;
 }
