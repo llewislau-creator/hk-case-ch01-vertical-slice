@@ -1,0 +1,44 @@
+name: Greybox Pass 02 validation
+on:
+  pull_request:
+    paths:
+      - 'app/src/district*'
+      - 'app/tests/**'
+      - 'app/district.html'
+      - 'vite.config.js'
+      - '.github/workflows/validate-greybox.yml'
+  push:
+    branches: ['feature/silent-box-greybox-pass02']
+  workflow_dispatch:
+jobs:
+  greybox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Navigation and continuity tests
+        run: node --test app/tests/district.test.mjs
+      - name: Build both entry points
+        run: npm run build
+      - name: Verify output and original texture URLs
+        run: |
+          test -s dist/index.html
+          test -s dist/district.html
+          test -s dist/textures/asphalt.svg
+          test -s dist/textures/concrete.svg
+          test -s dist/textures/plaster.svg
+          test -s dist/textures/wood.svg
+          test -s dist/textures/metal.svg
+          test -s dist/textures/sign.svg
+          test -s dist/textures/glass.svg
+      - name: Upload static build for browser QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: silent-box-greybox-pass02-dist
+          path: dist
+          retention-days: 7
