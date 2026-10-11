@@ -46,9 +46,9 @@ export function groundAllowed(x,z,prev=null,caseBarrier=false){
   return between(z,26,32);
  }
  if(between(z,56,62.14))return true;
- for(const a of ALLEYS)if(inRect(x,z,a,.20))return true;
+ for(const a of ALLEYS)if(inRect(x,z,a,0))return true;
  // Interior volumes have genuinely gated public and rear entrances.
- for(const s of SHOPS)if(inRect(x,z,s,.18)&&onShopGate(x,z,prev,s))return true;
+ for(const s of SHOPS)if(inRect(x,z,s,0)&&onShopGate(x,z,prev,s))return true;
  // Rear service lane. Wall crossing into it only from an alley or a shop rear door.
  if(between(z,85.86,95)&&between(x,18,178)){
   if(prev && prev.z<85.86){
@@ -101,7 +101,7 @@ export function nearby(pos,mode){
  const opts=mode==='roof'
   ?STAIRS.map(st=>({id:st.id+'-RF',name:st.id==='ST-W'?'西梯下樓':'東梯下樓',x:st.roofX,y:16,z:st.roofZ,kind:'stair'}))
   :STAIRS.map(st=>({id:st.id,name:st.id==='ST-W'?'西梯上樓':'東梯上樓',x:st.x,y:0,z:st.z,kind:'stair'}));
- if(mode==='ground')opts.push({...EVID,kind:'evidence',name:'紙盒發現位置'});
+ if(mode==='ground')opts.push({...EVIDENCE,kind:'evidence',name:'紙盒發現位置'});
  if(mode==='roof')opts.push({id:'I07',kind:'npc',name:'福伯鴿舍',x:169,y:16,z:119});
  const found=opts.map(o=>({...o,d:SQ(pos,o)})).sort((a,b)=>a.d-b.d)[0];
  return found&&found.d<3.5?found:null;
